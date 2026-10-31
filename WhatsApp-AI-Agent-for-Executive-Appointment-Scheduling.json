@@ -1,0 +1,280 @@
+{
+  "name": "My workflow 7",
+  "nodes": [
+    {
+      "parameters": {
+        "events": [
+          "incomingMessages"
+        ]
+      },
+      "type": "@1msg/n8n-nodes-1msg.wabaTrigger",
+      "typeVersion": 1,
+      "position": [
+        -800,
+        -32
+      ],
+      "id": "fe41b4dd-a74f-4d2b-bd66-e48ef0fbb242",
+      "name": "1MSG for WhatsApp Business API Trigger",
+      "webhookId": "531b08c4-6329-4737-8f72-44bc403c9d23",
+      "credentials": {
+        "oneMsgApi": {
+          "id": "rdaSQ6m44Dv8fRfD",
+          "name": "1MSG account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.message.body }}",
+        "options": {
+          "systemMessage": "# Role\nYou are an AI assistant that manages employee tasks via Telegram using the available\ntools.\nCurrent time: {{ $now.toISO() }}\n\n## Responsibilities\n- Retrieve employee info from the Google Sheet.\n- Schedule meetings via Google Calendar.\n- Send emails through Gmail.\n- Ask for missing details only when necessary.\n- Never invent data.\n\n## Tools\n### Employee Data Base (Sheet)\n- Read-only.\n- Use it to get employee details (email, role, department).\n- If no match: ask user to confirm the name.\n\n### Google Calendar\n- Create meetings only after receiving:\n-  date, time,\n- Get participant emails from the sheet.\n\n### Gmail\n- Send emails \n- Keep messages short and professional.\n\n## Decision Rules\n1. Identify intent: (info / meeting / email).\n2. Use tools only when needed.\n3. Ask only essential clarifying questions.\n4. After tool execution, provide a short confirmation summary."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        -352,
+        -32
+      ],
+      "id": "f32f0f50-db59-411c-a6ad-1533e39e7378",
+      "name": "AI Agent",
+      "retryOnFail": true,
+      "maxTries": 3
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-3.1-flash-lite",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.2,
+      "position": [
+        -656,
+        320
+      ],
+      "id": "19b0a9ab-22ec-45f6-8d99-7915b7dedeb2",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "Ld2fsXDUea20R2ur",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $json.message.id }}",
+        "contextWindowLength": 200
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.4,
+      "position": [
+        -432,
+        304
+      ],
+      "id": "329f5de4-0e89-443c-ab3f-4725e32d6e53",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {
+        "recipient": "={{ $('1MSG for WhatsApp Business API Trigger').item.json.chatId }}",
+        "body": "={{ $json.output }}"
+      },
+      "type": "@1msg/n8n-nodes-1msg.waba",
+      "typeVersion": 1,
+      "position": [
+        256,
+        -48
+      ],
+      "id": "fb270f22-28c6-4cc3-b3dc-354fbbee02d7",
+      "name": "1MSG for WhatsApp Business API",
+      "credentials": {
+        "oneMsgApi": {
+          "id": "rdaSQ6m44Dv8fRfD",
+          "name": "1MSG account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('To', ``, 'string') }}",
+        "subject": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Subject', ``, 'string') }}",
+        "message": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Message', ``, 'string') }}",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.gmailTool",
+      "typeVersion": 2.2,
+      "position": [
+        -288,
+        336
+      ],
+      "id": "fb725fa6-223b-4e3e-b221-02008383ee80",
+      "name": "Send a message in Gmail",
+      "webhookId": "0b5b8fbc-eed8-4da1-8f17-86b14d9f7142",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "cs7QiWh1zRDfCHxA",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "calendar": {
+          "__rl": true,
+          "value": "boodyhesham001@gmail.com",
+          "mode": "list",
+          "cachedResultName": "boodyhesham001@gmail.com"
+        },
+        "start": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Start', ``, 'string') }}",
+        "end": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('End', ``, 'string') }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.googleCalendarTool",
+      "typeVersion": 1.3,
+      "position": [
+        -128,
+        320
+      ],
+      "id": "cad55691-696d-4a1e-90ff-9aa9070f96a4",
+      "name": "Create an event in Google Calendar",
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "SZczpccQE6iIVdie",
+          "name": "Google Calendar account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "11db8zTWObT29YEuNhAW_L8XApAjFKGLraz3n3YmHK8w",
+          "mode": "list",
+          "cachedResultName": "n8n data",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/11db8zTWObT29YEuNhAW_L8XApAjFKGLraz3n3YmHK8w/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/11db8zTWObT29YEuNhAW_L8XApAjFKGLraz3n3YmHK8w/edit#gid=0"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTool",
+      "typeVersion": 4.7,
+      "position": [
+        32,
+        320
+      ],
+      "id": "05322306-39c9-41ab-996b-77cf9b0823c4",
+      "name": "Get row(s) in sheet in Google Sheets",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "Wwd6Si0XKBHHz0VO",
+          "name": "Google Sheets account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "1MSG for WhatsApp Business API Trigger": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "1MSG for WhatsApp Business API",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a message in Gmail": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create an event in Google Calendar": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet in Google Sheets": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": true
+  },
+  "versionId": "a0963a27-d8ca-48ae-a37d-215458801743",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "6d747aaf027c3ad07a5845209c4d24b25add38631f308167f892fb5934916117"
+  },
+  "nodeGroups": [],
+  "id": "55FN5N7XncYPDafe",
+  "tags": []
+}
